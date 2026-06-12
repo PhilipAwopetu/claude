@@ -183,6 +183,7 @@ Warriors vs Nuggets — parlay leg: Warriors +6.5"></textarea>
   </footer>
 </div>
 
+<script src="config.js"></script>
 <script type="module">
 import Anthropic from "https://esm.sh/@anthropic-ai/sdk";
 
@@ -239,7 +240,12 @@ const errorEl = $("error");
 const resultsEl = $("results");
 const analyzeBtn = $("analyzeBtn");
 
-apiKeyInput.value = localStorage.getItem("anthropic_api_key") || "";
+// Key resolution order: local config.js (never committed) → localStorage → manual entry.
+const configKey = (window.BETLENS_CONFIG && window.BETLENS_CONFIG.apiKey) || "";
+apiKeyInput.value = configKey || localStorage.getItem("anthropic_api_key") || "";
+if (configKey) {
+  apiKeyInput.closest(".panel").style.display = "none";
+}
 apiKeyInput.addEventListener("change", () => {
   localStorage.setItem("anthropic_api_key", apiKeyInput.value.trim());
 });
@@ -355,7 +361,7 @@ analyzeBtn.addEventListener("click", async () => {
   const gamesText = $("games").value.trim();
   if (!apiKey) { setError("Enter your Anthropic API key first."); return; }
   if (!gamesText) { setError("Add at least one game to analyze."); return; }
-  localStorage.setItem("anthropic_api_key", apiKey);
+  if (!configKey) localStorage.setItem("anthropic_api_key", apiKey);
 
   const client = new Anthropic({
     apiKey,

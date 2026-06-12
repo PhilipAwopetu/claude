@@ -13,14 +13,15 @@ A single-file browser app that analyzes the list of games you're planning to bet
 ## Running it
 
 1. Get an Anthropic API key from [console.anthropic.com](https://console.anthropic.com) → API Keys.
-2. Open `index.html` in a browser. Either double-click it, or serve the folder locally:
+2. **Skip typing the key every time (recommended):** copy `config.example.js` to `config.js` in the same folder and paste your key into it. The app loads it automatically and hides the key prompt. `config.js` is gitignored — **never commit your real key**.
+3. Open `index.html` in a browser. Either double-click it, or serve the folder locally:
 
    ```sh
    python3 -m http.server 8000
    # then open http://localhost:8000
    ```
 
-3. Paste your API key, enter your games, click **Analyze my bets**.
+4. Enter your games, click **Analyze my bets**. (Without `config.js`, paste the key once — it's remembered in your browser's localStorage.)
 
 ### Input format
 
