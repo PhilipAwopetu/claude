@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BetLens — Football &amp; Basketball Bet Analyzer</title>
+<style>
+  :root {
+    --bg: #0d1321;
+    --panel: #161e31;
+    --panel-2: #1c2640;
+    --line: #2a3554;
+    --text: #e8ecf6;
+    --muted: #9aa6c4;
+    --accent: #ffb454;
+    --green: #3ecf8e;
+    --red: #ff6b6b;
+    --amber: #ffd166;
+    --radius: 12px;
+    font-size: 16px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 80px; }
+  header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
+  h1 { font-size: 1.9rem; margin: 0; letter-spacing: 0.5px; }
+  h1 .ball { color: var(--accent); }
+  .tagline { color: var(--muted); margin: 0 0 22px; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+  .panel h2 { font-size: 1.05rem; margin: 0 0 10px; color: var(--accent); letter-spacing: 0.4px; }
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+  input[type="password"], input[type="text"], textarea {
+    width: 100%;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font: inherit;
+  }
+  textarea { min-height: 150px; resize: vertical; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.9rem; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .row > .grow { flex: 1 1 260px; }
+  .hint { font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text); margin-top: 12px; cursor: pointer; }
+  .check input { accent-color: var(--accent); width: 16px; height: 16px; }
+  button.primary {
+    background: var(--accent);
+    color: #1a1205;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 26px;
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+  }
+  button.primary:disabled { opacity: 0.5; cursor: wait; }
+  button.ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 14px;
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  #status { margin: 14px 0 0; color: var(--amber); font-size: 0.9rem; min-height: 1.4em; }
+  #error { margin: 14px 0 0; color: var(--red); font-size: 0.9rem; white-space: pre-wrap; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--muted);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 14px;
+  }
+  .card.bet { border-left-color: var(--green); }
+  .card.avoid { border-left-color: var(--red); }
+  .card.better_position { border-left-color: var(--amber); }
+  .card-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+  .matchup { font-weight: bold; font-size: 1.05rem; }
+  .sport-tag { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .badge {
+    font-size: 0.78rem;
+    font-weight: bold;
+    padding: 4px 12px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+  }
+  .badge.bet { background: rgba(62,207,142,0.15); color: var(--green); border: 1px solid var(--green); }
+  .badge.avoid { background: rgba(255,107,107,0.12); color: var(--red); border: 1px solid var(--red); }
+  .badge.better_position { background: rgba(255,209,102,0.12); color: var(--amber); border: 1px solid var(--amber); }
+  .position { font-size: 0.88rem; color: var(--muted); margin: 4px 0 10px; }
+  .alt {
+    background: rgba(255,209,102,0.08);
+    border: 1px dashed var(--amber);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 10px 0;
+    font-size: 0.92rem;
+  }
+  .alt strong { color: var(--amber); }
+  .meters { display: flex; gap: 24px; flex-wrap: wrap; margin: 10px 0; font-size: 0.85rem; }
+  .meter-label { color: var(--muted); margin-right: 6px; }
+  .confbar { display: inline-block; width: 120px; height: 8px; background: var(--panel-2); border-radius: 4px; vertical-align: middle; margin: 0 8px; overflow: hidden; }
+  .confbar i { display: block; height: 100%; background: var(--accent); }
+  .risk-low { color: var(--green); } .risk-medium { color: var(--amber); } .risk-high { color: var(--red); }
+  .factors { margin: 8px 0 0; padding-left: 20px; font-size: 0.9rem; }
+  .factors li { margin-bottom: 3px; }
+  .caveats { font-size: 0.82rem; color: var(--muted); margin-top: 10px; font-style: italic; }
+  .overall { border-left: 5px solid var(--accent); }
+  footer { margin-top: 36px; font-size: 0.78rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+  details.research { margin-top: 16px; }
+  details.research summary { cursor: pointer; color: var(--muted); font-size: 0.85rem; }
+  details.research pre { white-space: pre-wrap; font-size: 0.8rem; color: var(--muted); background: var(--panel-2); padding: 12px; border-radius: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="ball">●</span> BetLens</h1>
+    <span class="tagline">Football &amp; basketball bet analysis — keep it, drop it, or take a better position.</span>
+  </header>
+
+  <div class="panel">
+    <h2>1 · API key</h2>
+    <div class="row">
+      <div class="grow">
+        <label for="apiKey">Anthropic API key (stored only in this browser's localStorage)</label>
+        <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off" />
+      </div>
+      <button class="ghost" id="forgetKey" type="button">Forget key</button>
+    </div>
+    <p class="hint">Get a key at console.anthropic.com → API Keys. The key never leaves your browser except to call api.anthropic.com directly.</p>
+  </div>
+
+  <div class="panel">
+    <h2>2 · Your games &amp; positions</h2>
+    <label for="games">One game per line. Include the matchup, your intended bet, and odds if you have them.</label>
+    <textarea id="games" placeholder="Lakers vs Celtics — Lakers ML @ +150
+Chiefs vs Bills — Chiefs -3.5 @ -110
+Arsenal vs Chelsea — Over 2.5 goals @ 1.85
+Warriors vs Nuggets — parlay leg: Warriors +6.5"></textarea>
+    <div class="row" style="margin-top:10px">
+      <input type="file" id="fileInput" accept=".txt,.csv" />
+    </div>
+    <p class="hint">Or upload a .txt / .csv file — its contents will be loaded into the box above.</p>
+    <label class="check">
+      <input type="checkbox" id="useResearch" checked />
+      Research current info first (injuries, form, line movement) via web search — slower but much better analysis
+    </label>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <button class="primary" id="analyzeBtn" type="button">Analyze my bets</button>
+      <span id="status"></span>
+    </div>
+    <div id="error"></div>
+  </div>
+
+  <div id="results"></div>
+
+  <footer>
+    Analysis is informational only and not financial advice. Sports outcomes are inherently uncertain — no prediction is guaranteed.
+    Never bet more than you can afford to lose. If gambling stops being fun, seek help (e.g. 1-800-GAMBLER in the US).
+  </footer>
+</div>
+
+<script type="module">
+import Anthropic from "https://esm.sh/@anthropic-ai/sdk";
+
+const MODEL = "claude-opus-4-8";
+
+const SYSTEM_PROMPT = `You are a professional sports betting analyst covering football (American football and soccer) and basketball (NBA, NCAA, EuroLeague and other leagues). The user gives you a list of games with the position they intend to bet. Your job is to evaluate each position honestly and rigorously.
+
+For each game:
+- Identify the sport and parse the user's intended position (moneyline, spread, total, prop, parlay leg, etc.).
+- Weigh the relevant factors: recent form, head-to-head history, injuries and availability, rest/schedule spots, home/away splits, pace and matchup dynamics, motivation/situational angles, and — when odds are given — whether the line offers value relative to a fair price.
+- If current research notes are provided in the message, ground your analysis in them and prefer them over your own prior knowledge, which may be outdated.
+- Reach exactly one verdict:
+  - "bet" — the user's position is sound; keep it.
+  - "avoid" — neither the user's position nor any alternative in this game offers value; skip the game.
+  - "better_position" — there is a clearly stronger bet in the same game (other side, different market, adjusted line); name it precisely.
+- Calibrate confidence honestly on a 0–100 scale. Sports betting edges are small: confidence above 75 should be rare and reserved for clear mispricings. Never imply a guaranteed outcome.
+- Note correlation between the user's bets (same game, same team, stacked parlays) in the overall notes, along with any bankroll-level concerns like total exposure or chasing.
+
+Be direct and specific. If you lack enough information about a game (unknown teams, no date, ambiguous position), say so in the caveats and lower your confidence rather than guessing.`;
+
+const OUTPUT_SCHEMA = {
+  type: "object",
+  properties: {
+    games: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          matchup: { type: "string", description: "The two teams, e.g. 'Lakers vs Celtics'" },
+          sport: { type: "string", enum: ["football", "basketball", "other"] },
+          user_position: { type: "string", description: "The bet the user intends to place, as parsed from their input" },
+          verdict: { type: "string", enum: ["bet", "avoid", "better_position"] },
+          confidence: { type: "integer", description: "0-100. Honest calibration; >75 only for clear mispricings." },
+          risk_level: { type: "string", enum: ["low", "medium", "high"] },
+          analysis: { type: "string", description: "Concise analysis, roughly 60-120 words" },
+          key_factors: { type: "array", items: { type: "string" }, description: "3-5 short bullet factors" },
+          better_position: { type: "string", description: "The specific recommended alternative bet. Empty string when verdict is 'bet' or 'avoid'." },
+          caveats: { type: "string", description: "Uncertainty, missing info, or data-staleness warnings. Empty string if none." }
+        },
+        required: ["matchup", "sport", "user_position", "verdict", "confidence", "risk_level", "analysis", "key_factors", "better_position", "caveats"],
+        additionalProperties: false
+      }
+    },
+    overall_notes: { type: "string", description: "Bankroll-level view: correlation between bets, total exposure, anything the user should know across the whole slate" }
+  },
+  required: ["games", "overall_notes"],
+  additionalProperties: false
+};
+
+const $ = (id) => document.getElementById(id);
+const apiKeyInput = $("apiKey");
+const statusEl = $("status");
+const errorEl = $("error");
+const resultsEl = $("results");
+const analyzeBtn = $("analyzeBtn");
+
+apiKeyInput.value = localStorage.getItem("anthropic_api_key") || "";
+apiKeyInput.addEventListener("change", () => {
+  localStorage.setItem("anthropic_api_key", apiKeyInput.value.trim());
+});
+$("forgetKey").addEventListener("click", () => {
+  localStorage.removeItem("anthropic_api_key");
+  apiKeyInput.value = "";
+});
+
+$("fileInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { $("games").value = String(reader.result).trim(); };
+  reader.readAsText(file);
+});
+
+function setStatus(msg) { statusEl.textContent = msg; }
+function setError(msg) { errorEl.textContent = msg; }
+
+function textFrom(message) {
+  return message.content.filter((b) => b.type === "text").map((b) => b.text).join("\n");
+}
+
+async function runResearch(client, gamesText) {
+  // Web search runs server-side; the loop continues on pause_turn.
+  let messages = [{
+    role: "user",
+    content: `Research current, betting-relevant information for each of these games: injuries and player availability, recent team form, rest/schedule situation, and current betting lines or notable line movement. Today's date matters — find the upcoming edition of each matchup. Summarize your findings per game in plain text. Games:\n\n${gamesText}`
+  }];
+  let resp = await client.messages.create({
+    model: MODEL,
+    max_tokens: 16000,
+    thinking: { type: "adaptive" },
+    tools: [{ type: "web_search_20260209", name: "web_search" }],
+    messages
+  });
+  let guard = 0;
+  while (resp.stop_reason === "pause_turn" && guard++ < 6) {
+    setStatus(`Researching games… (continuing, round ${guard + 1})`);
+    messages = [...messages, { role: "assistant", content: resp.content }];
+    resp = await client.messages.create({
+      model: MODEL,
+      max_tokens: 16000,
+      thinking: { type: "adaptive" },
+      tools: [{ type: "web_search_20260209", name: "web_search" }],
+      messages
+    });
+  }
+  if (resp.stop_reason === "refusal") throw new Error("The research request was declined by the model. Try again without web research.");
+  return textFrom(resp);
+}
+
+async function runAnalysis(client, gamesText, researchNotes) {
+  let userContent = `Here is my list of games and the positions I intend to bet:\n\n${gamesText}`;
+  if (researchNotes) {
+    userContent += `\n\nCurrent research notes (gathered just now via web search — treat as the freshest information available):\n\n${researchNotes}`;
+  } else {
+    userContent += `\n\nNo live research is available; rely on your general knowledge and flag staleness in the caveats.`;
+  }
+  const resp = await client.messages.create({
+    model: MODEL,
+    max_tokens: 16000,
+    thinking: { type: "adaptive" },
+    system: SYSTEM_PROMPT,
+    output_config: { format: { type: "json_schema", schema: OUTPUT_SCHEMA } },
+    messages: [{ role: "user", content: userContent }]
+  });
+  if (resp.stop_reason === "refusal") throw new Error("The analysis request was declined by the model.");
+  return JSON.parse(textFrom(resp));
+}
+
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const VERDICT_LABEL = { bet: "Keep the bet", avoid: "Avoid", better_position: "Better position" };
+
+function render(result, researchNotes) {
+  let html = "";
+  for (const g of result.games) {
+    const conf = Math.max(0, Math.min(100, Number(g.confidence) || 0));
+    html += `
+    <div class="card ${esc(g.verdict)}">
+      <div class="card-head">
+        <div>
+          <div class="sport-tag">${esc(g.sport)}</div>
+          <div class="matchup">${esc(g.matchup)}</div>
+        </div>
+        <span class="badge ${esc(g.verdict)}">${VERDICT_LABEL[g.verdict] || esc(g.verdict)}</span>
+      </div>
+      <div class="position">Your position: ${esc(g.user_position)}</div>
+      ${g.verdict === "better_position" && g.better_position ? `<div class="alt"><strong>Take instead:</strong> ${esc(g.better_position)}</div>` : ""}
+      <div class="meters">
+        <span><span class="meter-label">Confidence</span><span class="confbar"><i style="width:${conf}%"></i></span>${conf}/100</span>
+        <span><span class="meter-label">Risk</span><span class="risk-${esc(g.risk_level)}">${esc(g.risk_level).toUpperCase()}</span></span>
+      </div>
+      <div>${esc(g.analysis)}</div>
+      ${g.key_factors?.length ? `<ul class="factors">${g.key_factors.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>` : ""}
+      ${g.caveats ? `<div class="caveats">⚠ ${esc(g.caveats)}</div>` : ""}
+    </div>`;
+  }
+  if (result.overall_notes) {
+    html += `<div class="card overall"><div class="matchup">Slate overview</div><div style="margin-top:8px">${esc(result.overall_notes)}</div></div>`;
+  }
+  if (researchNotes) {
+    html += `<details class="research"><summary>Show raw research notes</summary><pre>${esc(researchNotes)}</pre></details>`;
+  }
+  resultsEl.innerHTML = html;
+}
+
+analyzeBtn.addEventListener("click", async () => {
+  setError("");
+  resultsEl.innerHTML = "";
+  const apiKey = apiKeyInput.value.trim();
+  const gamesText = $("games").value.trim();
+  if (!apiKey) { setError("Enter your Anthropic API key first."); return; }
+  if (!gamesText) { setError("Add at least one game to analyze."); return; }
+  localStorage.setItem("anthropic_api_key", apiKey);
+
+  const client = new Anthropic({
+    apiKey,
+    dangerouslyAllowBrowser: true,
+    defaultHeaders: { "anthropic-dangerous-direct-browser-access": "true" }
+  });
+
+  analyzeBtn.disabled = true;
+  try {
+    let researchNotes = "";
+    if ($("useResearch").checked) {
+      setStatus("Researching games (injuries, form, lines)… this can take a minute.");
+      researchNotes = await runResearch(client, gamesText);
+    }
+    setStatus("Analyzing your positions…");
+    const result = await runAnalysis(client, gamesText, researchNotes);
+    setStatus(`Done — ${result.games.length} game${result.games.length === 1 ? "" : "s"} analyzed.`);
+    render(result, researchNotes);
+  } catch (err) {
+    setStatus("");
+    if (err instanceof Anthropic.AuthenticationError) {
+      setError("Invalid API key. Check it at console.anthropic.com.");
+    } else if (err instanceof Anthropic.RateLimitError) {
+      setError("Rate limited by the API. Wait a minute and try again.");
+    } else if (err instanceof Anthropic.APIError) {
+      setError(`API error (${err.status}): ${err.message}`);
+    } else {
+      setError(`Error: ${err.message || err}`);
+    }
+  } finally {
+    analyzeBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
